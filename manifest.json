@@ -1,0 +1,18 @@
+{
+  "name": "UNIN Raspored & Putovanja",
+  "short_name": "UNIN Raspored",
+  "description": "Raspored predavanja elektrotehnike i vozni red Ludbreg - Varaždin.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#10111A",
+  "theme_color": "#10111A",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+:root {
+    --app-bg-dark: #10111A;
+    --app-surface-dark: #191A23;
+    --app-glass-bg: rgba(26, 27, 38, 0.7);
+    --app-border: rgba(255, 255, 255, 0.08);
+    --app-primary-gradient: linear-gradient(135deg, #8A2BE2 0%, #4A00E0 100%);
+    --app-primary-color: #6c2bd8;
+
+    --app-bg-light: #F0F2F5;
+    --app-surface-light: #FFFFFF;
+    --app-glass-bg-light: rgba(255, 255, 255, 0.75);
+    --app-border-light: rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--app-bg-dark);
+    color: #EAEAEA;
+    min-height: 100vh;
+    transition: background-color 0.3s ease;
+}
+
+[data-bs-theme="light"] body {
+    background-color: var(--app-bg-light);
+    color: #1C1E21;
+}
+
+/* Glassmorphism efekt */
+.glass-effect {
+    background: var(--app-glass-bg);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid var(--app-border);
+}
+
+[data-bs-theme="light"] .glass-effect {
+    background: var(--app-glass-bg-light);
+    border-color: var(--app-border-light);
+}
+
+.app-header {
+    position: sticky;
+    top: 0.5rem;
+    z-index: 1050;
+    margin: 0.5rem 1rem 0;
+    border-radius: 0.75rem;
+}
+
+.group-badge-select {
+    width: auto;
+    background-color: var(--app-surface-dark);
+    border-color: var(--app-border);
+    color: #fff;
+    cursor: pointer;
+}
+
+[data-bs-theme="light"] .group-badge-select {
+    background-color: var(--app-surface-light);
+    color: #000;
+}
+
+.day-picker {
+    border-radius: 0.5rem;
+}
+
+.day-picker .btn-outline-secondary {
+    border: none;
+    color: #9A9DA8;
+}
+
+.day-picker .btn-outline-secondary.active {
+    background: var(--app-primary-gradient);
+    color: white;
+}
+
+.route-badge {
+    background-color: var(--app-surface-dark);
+    padding: 0.35rem 0.85rem;
+    border-radius: 2rem;
+    font-size: 0.85rem;
+    border: 1px solid var(--app-border);
+}
+
+[data-bs-theme="light"] .route-badge {
+    background-color: var(--app-surface-light);
+    border-color: var(--app-border-light);
+}
+
+.lecture-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lecture-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.badge-meh {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.transit-card {
+    transition: transform 0.2s ease;
+}
+
+.transit-card:hover {
+    transform: translateY(-2px);
+}

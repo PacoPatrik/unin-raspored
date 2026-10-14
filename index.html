@@ -1,116 +1,146 @@
 <!doctype html>
-<html lang="hr" data-bs-theme="dark">
+<html lang="hr">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#10111A">
+    <meta name="theme-color" content="#0d1117">
+    <title>UNIN Raspored & Vlakovi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <title>UNIN 3. Godina | Raspored & Vlakovi</title>
 </head>
 <body>
-    <div class="app-container">
+    <div class="app-shell">
         <!-- Zaglavlje -->
-        <header class="app-header glass-effect shadow-sm">
-            <div class="container-xl d-flex justify-content-between align-items-center py-2">
-                <div>
-                    <h1 class="h6 mb-0 fw-bold">
-                        <i class="bi bi-mortarboard-fill text-primary me-2"></i>Elektrotehnika (3. god)
-                    </h1>
-                    <small class="text-muted d-none d-sm-inline">Sveučilišni centar Varaždin</small>
+        <header class="app-header">
+            <div class="container-lg d-flex justify-content-between align-items-center">
+                <div class="brand">
+                    <span class="brand-title"><i class="bi bi-mortarboard-fill text-gradient me-2"></i>Sveučilište Sjever</span>
+                    <span class="brand-sub">Elektrotehnika • 3. Godina</span>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="small text-muted d-none d-md-inline">Moja grupa:</span>
-                    <select id="groupSelect" class="form-select form-select-sm group-badge-select">
-                        <option value="Sve">Sve grupe</option>
-                        <option value="A">Grupa A</option>
-                        <option value="B">Grupa B</option>
-                        <option value="C">Grupa C</option>
-                    </select>
+                <!-- Odabir Grupe -->
+                <div class="group-switch">
+                    <span class="group-label">Grupa:</span>
+                    <div class="group-buttons" id="group-buttons">
+                        <button type="button" class="grp-btn" data-grp="Sve">Sve</button>
+                        <button type="button" class="grp-btn active" data-grp="A">A</button>
+                        <button type="button" class="grp-btn" data-grp="B">B</button>
+                        <button type="button" class="grp-btn" data-grp="C">C</button>
+                    </div>
                 </div>
             </div>
         </header>
 
-        <main class="container-xl content-body py-3">
-            <!-- Izbor Tjedna i Dana -->
-            <div class="glass-effect p-3 rounded-4 mb-4">
-                <div class="row g-2 align-items-center">
-                    <div class="col-md-5">
-                        <label for="weekSelect" class="form-label small text-muted mb-1">Odaberi tjedan semestra:</label>
-                        <select id="weekSelect" class="form-select form-select-sm"></select>
+        <main class="container-lg py-4">
+            <!-- 1. KONTROLE: Tjedan i Dani (NA VRHU) -->
+            <div class="glass-panel p-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-primary-gradient px-3 py-2 rounded-pill"><i class="bi bi-calendar-week me-1"></i> Odabir tjedna:</span>
+                        <select id="week-select" class="form-select form-select-sm custom-select"></select>
                     </div>
-                    <div class="col-md-7">
-                        <label class="form-label small text-muted mb-1">Odaberi dan:</label>
-                        <div class="btn-group w-100 day-picker" role="group" id="dayButtons">
-                            <button type="button" class="btn btn-sm btn-outline-secondary" data-day="0">Pon</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" data-day="1">Uto</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" data-day="2">Sri</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" data-day="3">Čet</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" data-day="4">Pet</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Preporučeni vlakovi za taj dan -->
-            <div class="row g-3 mb-4">
-                <!-- Odlazak Ludbreg -> Varaždin -->
-                <div class="col-md-6">
-                    <div class="glass-effect p-3 rounded-4 transit-card h-100 border-start border-4 border-success">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold text-success">
-                                <i class="bi bi-train-front-fill me-1"></i> Odlazak: Ludbreg ➔ Varaždin
-                            </span>
-                            <span id="badge-morning-target" class="badge bg-success-subtle text-success"></span>
-                        </div>
-                        <div id="morning-train-result"></div>
+                    <div class="route-badge">
+                        <i class="bi bi-train-front text-info me-1"></i> Ludbreg ⇄ Varaždin <span class="text-warning ms-1">(30 min pješice)</span>
                     </div>
                 </div>
 
-                <!-- Povratak Varaždin -> Ludbreg -->
-                <div class="col-md-6">
-                    <div class="glass-effect p-3 rounded-4 transit-card h-100 border-start border-4 border-info">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold text-info">
-                                <i class="bi bi-train-front-fill me-1"></i> Povratak: Varaždin ➔ Ludbreg
-                            </span>
-                            <span id="badge-evening-target" class="badge bg-info-subtle text-info"></span>
-                        </div>
-                        <div id="evening-train-result"></div>
-                    </div>
+                <!-- Birač Dana -->
+                <div class="days-nav" id="days-nav">
+                    <button class="day-tab" data-day="0">
+                        <span class="day-short">PON</span>
+                        <span class="day-dot" id="dot-0"></span>
+                    </button>
+                    <button class="day-tab active" data-day="1">
+                        <span class="day-short">UTO</span>
+                        <span class="day-dot" id="dot-1"></span>
+                    </button>
+                    <button class="day-tab" data-day="2">
+                        <span class="day-short">SRI</span>
+                        <span class="day-dot" id="dot-2"></span>
+                    </button>
+                    <button class="day-tab" data-day="3">
+                        <span class="day-short">ČET</span>
+                        <span class="day-dot" id="dot-3"></span>
+                    </button>
+                    <button class="day-tab" data-day="4">
+                        <span class="day-short">PET</span>
+                        <span class="day-dot" id="dot-4"></span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Prikaz rasporeda predavanja -->
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0" id="current-day-label">Raspored Predavanja</h5>
-                <span id="total-lectures-count" class="badge bg-primary">0 predavanja</span>
-            </div>
+            <!-- 2. GLAVNI RASPORED PREDAVANJA -->
+            <section class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold m-0" id="selected-day-heading">Utorak</h4>
+                    <span class="badge bg-dark-subtle border border-secondary text-light px-3 py-2 rounded-pill" id="lecture-count">0 predavanja</span>
+                </div>
 
-            <div id="lectures-container" class="row g-3"></div>
+                <div id="lectures-list" class="d-flex flex-column gap-3">
+                    <!-- Kartice predavanja -->
+                </div>
+            </section>
 
-            <!-- Kompletan popis svih vlakova -->
-            <div class="accordion mt-4" id="timetableAccordion">
-                <div class="accordion-item glass-effect">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed bg-transparent text-light" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTimetable">
-                            <i class="bi bi-clock-history me-2 text-warning"></i> Cjelokupni vozni red vlakova (Ludbreg ⇄ Varaždin)
-                        </button>
-                    </h2>
-                    <div id="collapseTimetable" class="accordion-collapse collapse" data-bs-parent="#timetableAccordion">
-                        <div class="accordion-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6 class="text-success fw-bold">Ludbreg ➔ Varaždin:</h6>
-                                    <ul class="list-group list-group-flush small" id="all-trains-l2v"></ul>
-                                </div>
-                                <div class="col-md-6 mt-3 mt-md-0">
-                                    <h6 class="text-info fw-bold">Varaždin ➔ Ludbreg:</h6>
-                                    <ul class="list-group list-group-flush small" id="all-trains-v2l"></ul>
-                                </div>
+            <!-- 3. PUTOVANJE VLAKOVIMA ZA TAJ DAN -->
+            <section class="mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-ticket-perforated-fill text-warning me-2"></i>Plan Vlakova za ovaj dan</h5>
+                <div class="row g-3">
+                    <!-- Odlazak -->
+                    <div class="col-md-4">
+                        <div class="card-transit card-morning h-100 p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="transit-tag tag-morning"><i class="bi bi-arrow-up-right-circle-fill me-1"></i> Odlazak na faks</span>
+                                <span class="badge-time-status" id="morning-status">-</span>
+                            </div>
+                            <div class="transit-time" id="morning-time">--:-- ➔ --:--</div>
+                            <div class="transit-sub" id="morning-desc">Ludbreg ➔ Varaždin</div>
+                        </div>
+                    </div>
+
+                    <!-- Redovni povratak -->
+                    <div class="col-md-4">
+                        <div class="card-transit card-evening h-100 p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="transit-tag tag-evening"><i class="bi bi-check-circle-fill me-1"></i> Redovni povratak</span>
+                                <span class="badge-time-status" id="evening-status">-</span>
+                            </div>
+                            <div class="transit-time" id="evening-time">--:-- ➔ --:--</div>
+                            <div class="transit-sub" id="evening-desc">Ostaješ do kraja predavanja</div>
+                        </div>
+                    </div>
+
+                    <!-- RANI BIJEG (30 MIN RANIJE) -->
+                    <div class="col-md-4">
+                        <div class="card-transit card-early h-100 p-3" id="early-transit-card">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="transit-tag tag-early"><i class="bi bi-lightning-charge-fill me-1"></i> Bijeg 30 min ranije</span>
+                                <span class="badge-time-status text-warning border-warning" id="early-badge">Top Opcija</span>
+                            </div>
+                            <div class="transit-time text-warning" id="early-time">--:-- ➔ --:--</div>
+                            <div class="transit-sub text-light" id="early-desc">Pobjeći ranije s nastave</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. VOZNI RED VLAKOVA (HARMONIKA) -->
+            <div class="glass-panel p-0 overflow-hidden mt-4">
+                <button class="accordion-btn w-100" type="button" data-bs-toggle="collapse" data-bs-target="#trains-table-collapse">
+                    <span><i class="bi bi-clock-history me-2 text-info"></i> Pogledaj cijeli vozni red vlakova (svi polasci)</span>
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+                <div class="collapse" id="trains-table-collapse">
+                    <div class="p-3 border-top border-secondary-subtle">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <h6 class="fw-bold text-success border-bottom border-success-subtle pb-2">Ludbreg ➔ Varaždin:</h6>
+                                <div id="table-l2v" class="train-table-body"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold text-info border-bottom border-info-subtle pb-2">Varaždin ➔ Ludbreg:</h6>
+                                <div id="table-v2l" class="train-table-body"></div>
                             </div>
                         </div>
                     </div>

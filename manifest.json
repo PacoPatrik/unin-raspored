@@ -4,8 +4,8 @@
   "description": "Raspored predavanja elektrotehnike i vozni red Ludbreg - Varaždin.",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#10111A",
-  "theme_color": "#10111A",
+  "background_color": "#0f1115",
+  "theme_color": "#0f1115",
   "orientation": "portrait-primary",
   "icons": [
     {

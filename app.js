@@ -1,4 +1,4 @@
-// 1. SLUŽBENI VOZNI RED VLAKOVA (HŽPP)
+// ============ 1. VOZNI RED (HŽPP) ============
 const TRAINS_L2V = [
     { no: "3600", dep: "04:33", arr: "05:01", dur: 28 },
     { no: "3602", dep: "05:56", arr: "06:24", dur: 28 },
@@ -14,7 +14,6 @@ const TRAINS_L2V = [
     { no: "3618", dep: "19:49", arr: "20:16", dur: 27 },
     { no: "3620", dep: "21:03", arr: "21:30", dur: 27 }
 ];
-
 const TRAINS_V2L = [
     { no: "3601", dep: "04:02", arr: "04:29", dur: 27 },
     { no: "793",  dep: "05:06", arr: "05:29", dur: 23 },
@@ -28,410 +27,209 @@ const TRAINS_V2L = [
     { no: "6403", dep: "19:21", arr: "19:47", dur: 26 },
     { no: "3617", dep: "22:18", arr: "22:44", dur: 26 }
 ];
+const WALK = 30; // minuta pješice kolodvor ⇄ fakultet
 
-function toMinutes(timeStr) {
-    const parts = timeStr.split(":");
-    return Number(parts[0]) * 60 + Number(parts[1]);
-}
+const toMin = t => { const [h, m] = t.split(":"); return +h * 60 + +m; };
+const fmtMin = m => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 
-function formatTime(minutes) {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-}
+// ============ 2. RASPORED (izmjene 22.10.2026.) ============
+const P = "Predavanje", A = "Auditorne vježbe", LAB = "Laboratorij";
+const C = {
+    RE: "Razvod električne energije", EE: "Energetska elektronika", PI: "Procesna instrumentacija",
+    OR: "Osnove robotike", AS: "Automatski strojevi i uređaji", ES: "Električni strojevi",
+    AU: "Automatsko upravljanje", DVK: "Digitalne videokomunikacije"
+};
+const L = (start, end, course, type, room, grp = "Sve", meh = false) => ({ start, end, course, type, room, grp, meh });
 
-// 2. DETALJNI RASPORED (SVIH 16 STRANICA PDF-A)
+const tue = () => [L("13:00", "14:30", C.AU, P, "U1-1"), L("14:30", "16:00", C.DVK, P, "U1-1")];
+const dvkLab = () => [L("16:00", "19:00", C.DVK, LAB, "U1-9")];
+const orLab = () => [L("08:30", "10:30", C.OR, LAB, "U3-211", "A"), L("10:30", "12:30", C.OR, LAB, "U3-211", "B")];
+const asuOrLab = () => [
+    L("08:00", "09:30", "Automatsko upravljanje (ASU)", LAB, "U1-10", "A"), L("08:00", "09:30", "Osnove robotike (OR)", LAB, "U2-211", "C"),
+    L("09:30", "11:00", "Automatsko upravljanje (ASU)", LAB, "U1-10", "B"), L("09:30", "11:00", "Osnove robotike (OR)", LAB, "U2-211", "A"),
+    L("11:00", "12:30", "Automatsko upravljanje (ASU)", LAB, "U1-10", "C"), L("11:00", "12:30", "Osnove robotike (OR)", LAB, "U2-211", "B")
+];
+const wedRest = () => [
+    L("11:00", "12:30", C.PI, P, "U1-23"), L("12:30", "14:00", C.PI, A, "U1-23"),
+    L("14:00", "16:00", C.OR, P, "U1-1", "Sve", true)
+];
+const wed = k => [L("08:00", "09:30", C[k], P, "U1-23"), L("09:30", "11:00", C[k], A, "U1-23"), ...wedRest()];
+const thu = (k, meh) => [
+    L("08:00", "09:30", C[k], P, "U1-1"), L("09:30", "11:00", C[k], A, "U1-1"),
+    L("11:00", "12:30", C.AS, P, "U1-1", "Sve", meh), L("12:30", "14:00", C.AS, A, "U1-1", "Sve", meh)
+];
+const thuWeek1 = () => [
+    L("08:00", "09:30", C.RE, P, "U1-1"), L("09:30", "11:00", C.EE, P, "U1-1"),
+    L("11:00", "12:30", C.AS, P, "U1-1", "Sve", true), L("12:30", "14:00", C.AS, A, "U1-1", "Sve", true)
+];
+const fri = () => [L("09:30", "11:00", C.ES, P, "U1-23"), L("11:00", "12:30", C.ES, A, "U1-23")];
+
+// [pon, uto, sri, čet, pet]  ·  tekst = praznik/neradni dan
 const WEEKS = [
-    {
-        label: "1. Tjedan (05.10. - 10.10.)",
-        days: {
-            0: [],
-            1: [
-                { start: "13:00", end: "15:00", course: "Automatsko upravljanje", type: "Predavanje", room: "U1-1", grp: "Sve", meh: false },
-                { start: "15:00", end: "16:00", course: "Digitalne videokomunikacije", type: "Predavanje", room: "U1-1", grp: "Sve", meh: false }
-            ],
-            2: [
-                { start: "11:00", end: "13:00", course: "Procesna instrumentacija", type: "Predavanje", room: "U1-23", grp: "Sve", meh: false },
-                { start: "13:00", end: "14:00", course: "Procesna instrumentacija", type: "Auditorne vježbe", room: "U1-23", grp: "Sve", meh: false },
-                { start: "14:00", end: "16:00", course: "Osnove robotike", type: "Predavanje", room: "U1-1", grp: "Sve", meh: true }
-            ],
-            3: [
-                { start: "08:00", end: "10:00", course: "Razvod električne energije", type: "Predavanje", room: "U1-1", grp: "Sve", meh: false },
-                { start: "10:00", end: "11:00", course: "Energetska elektronika", type: "Predavanje", room: "U1-1", grp: "Sve", meh: false },
-                { start: "11:00", end: "13:00", course: "Automatski strojevi i uređaji", type: "Predavanje", room: "U1-1", grp: "Sve", meh: true },
-                { start: "13:00", end: "14:00", course: "Automatski strojevi i uređaji", type: "Auditorne vježbe", room: "U1-1", grp: "Sve", meh: true }
-            ],
-            4: [
-                { start: "10:00", end: "11:00", course: "Električni strojevi", type: "Predavanje", room: "U1-23", grp: "Sve", meh: false },
-                { start: "11:00", end: "13:00", course: "Električni strojevi", type: "Auditorne vježbe", room: "U1-23", grp: "Sve", meh: false }
-            ]
-        }
-    },
-    {
-        label: "2. Tjedan (12.10. - 17.10.)",
-        days: {
-            0: [],
-            1: [
-                { start: "13:00", end: "15:00", course: "Automatsko upravljanje", type: "Predavanje", room: "U1-1", grp: "Sve", meh: false },
-                { start: "15:00", end: "16:00", course: "Digitalne videokomunikacije", type: "Predavanje", room: "U1-1", grp: "Sve", meh: false }
-            ],
-            2: [
-                { start: "08:00", end: "10:00", course: "Razvod električne energije", type: "Predavanje", room: "U1-23", grp: "Sve", meh: false },
-                { start: "10:00", end: "11:00", course: "Razvod električne energije", type: "Auditorne vježbe", room: "U1-23", grp: "Sve", meh: false },
-                { start: "11:00", end: "13:00", course: "Procesna instrumentacija", type: "Predavanje", room: "U1-23", grp: "Sve", meh: false },
-                { start: "13:00", end: "14:00", course: "Procesna instrumentacija", type: "Auditorne vježbe", room: "U1-23", grp: "Sve", meh: false },
-                { start: "14:00", end: "16:00", course: "Osnove robotike", type: "Predavanje", room: "U1-1", grp: "Sve", meh: true }
-            ],
-            3: [
-                { start: "08:00", end: "10:00", course: "Energetska elektronika", type: "Predavanje", room: "U1-1", grp: "Sve", meh: false },
-                { start: "10:00", end: "11:00", course: "Energetska elektronika", type: "Auditorne vježbe", room: "U1-1", grp: "Sve", meh: false },
-                { start: "11:00", end: "13:00", course: "Automatski strojevi i uređaji", type: "Predavanje", room: "U1-1", grp: "Sve", meh: true },
-                { start: "13:00", end: "14:00", course: "Automatski strojevi i uređaji", type: "Auditorne vježbe", room: "U1-1", grp: "Sve", meh: true }
-            ],
-            4: [
-                { start: "10:00", end: "11:00", course: "Električni strojevi", type: "Predavanje", room: "U1-23", grp: "Sve", meh: false },
-                { start: "11:00", end: "13:00", course: "Električni strojevi", type: "Auditorne vježbe", room: "U1-23", grp: "Sve", meh: false }
-            ]
-        }
-    },
-    {
-        label: "3. & 4. Tjedan (19.10. - 31.10.)",
-        days: {
-            0: [],
-            1: [
-                { start: "13:00", end: "15:00", course: "Automatsko upravljanje", type: "Predavanje", room: "U1-1", grp: "Sve", meh: false },
-                { start: "15:00", end: "16:00", course: "Digitalne videokomunikacije", type: "Predavanje", room: "U1-1", grp: "Sve", meh: false }
-            ],
-            2: [
-                { start: "08:00", end: "10:00", course: "Energetska elektronika", type: "Predavanje", room: "U1-23", grp: "Sve", meh: false },
-                { start: "10:00", end: "11:00", course: "Energetska elektronika", type: "Auditorne vježbe", room: "U1-23", grp: "Sve", meh: false },
-                { start: "11:00", end: "13:00", course: "Procesna instrumentacija", type: "Predavanje", room: "U1-23", grp: "Sve", meh: false },
-                { start: "13:00", end: "14:00", course: "Procesna instrumentacija", type: "Auditorne vježbe", room: "U1-23", grp: "Sve", meh: false },
-                { start: "14:00", end: "16:00", course: "Osnove robotike", type: "Predavanje", room: "U1-1", grp: "Sve", meh: true }
-            ],
-            3: [
-                { start: "08:00", end: "10:00", course: "Razvod električne energije", type: "Predavanje", room: "U1-1", grp: "Sve", meh: false },
-                { start: "10:00", end: "11:00", course: "Razvod električne energije", type: "Auditorne vježbe", room: "U1-1", grp: "Sve", meh: false },
-                { start: "11:00", end: "13:00", course: "Automatski strojevi i uređaji", type: "Predavanje", room: "U1-1", grp: "Sve", meh: true },
-                { start: "13:00", end: "14:00", course: "Automatski strojevi i uređaji", type: "Auditorne vježbe", room: "U1-1", grp: "Sve", meh: true }
-            ],
-            4: [
-                { start: "10:00", end: "11:00", course: "Električni strojevi", type: "Predavanje", room: "U1-23", grp: "Sve", meh: false },
-                { start: "11:00", end: "13:00", course: "Električni strojevi", type: "Auditorne vježbe", room: "U1-23", grp: "Sve", meh: false }
-            ]
-        }
-    },
-    {
-        label: "5. Tjedan (Laboratoriji: 02.11. - 07.11.)",
-        days: {
-            0: [],
-            1: [
-                { start: "08:00", end: "10:00", course: "Automatsko upravljanje (ASU)", type: "Laboratorij", room: "U1-10", grp: "A", meh: false },
-                { start: "08:00", end: "10:00", course: "Osnove robotike (OR)", type: "Laboratorij", room: "U2-211", grp: "C", meh: false },
-                { start: "10:00", end: "11:30", course: "Automatsko upravljanje (ASU)", type: "Laboratorij", room: "U1-10", grp: "B", meh: false },
-                { start: "10:00", end: "11:30", course: "Osnove robotike (OR)", type: "Laboratorij", room: "U2-211", grp: "A", meh: false },
-                { start: "11:30", end: "13:00", course: "Automatsko upravljanje (ASU)", type: "Laboratorij", room: "U1-10", grp: "C", meh: false },
-                { start: "11:30", end: "13:00", course: "Osnove robotike (OR)", type: "Laboratorij", room: "U2-211", grp: "B", meh: false },
-                { start: "13:00", end: "15:00", course: "Automatsko upravljanje", type: "Predavanje", room: "U1-1", grp: "Sve", meh: false },
-                { start: "15:00", end: "16:00", course: "Digitalne videokomunikacije", type: "Predavanje", room: "U1-1", grp: "Sve", meh: false }
-            ],
-            2: [
-                { start: "08:00", end: "10:00", course: "Energetska elektronika", type: "Predavanje", room: "U1-23", grp: "Sve", meh: false },
-                { start: "10:00", end: "11:00", course: "Energetska elektronika", type: "Auditorne vježbe", room: "U1-23", grp: "Sve", meh: false },
-                { start: "11:00", end: "13:00", course: "Procesna instrumentacija", type: "Predavanje", room: "U1-23", grp: "Sve", meh: false },
-                { start: "13:00", end: "14:00", course: "Procesna instrumentacija", type: "Auditorne vježbe", room: "U1-23", grp: "Sve", meh: false },
-                { start: "14:00", end: "16:00", course: "Osnove robotike", type: "Predavanje", room: "U1-1", grp: "Sve", meh: true }
-            ],
-            3: [
-                { start: "08:00", end: "10:00", course: "Razvod električne energije", type: "Predavanje", room: "U1-1", grp: "Sve", meh: false },
-                { start: "10:00", end: "11:00", course: "Razvod električne energije", type: "Auditorne vježbe", room: "U1-1", grp: "Sve", meh: false },
-                { start: "11:00", end: "13:00", course: "Automatski strojevi i uređaji", type: "Predavanje", room: "U1-1", grp: "Sve", meh: true },
-                { start: "13:00", end: "14:00", course: "Automatski strojevi i uređaji", type: "Auditorne vježbe", room: "U1-1", grp: "Sve", meh: true }
-            ],
-            4: [
-                { start: "10:00", end: "11:00", course: "Električni strojevi", type: "Predavanje", room: "U1-23", grp: "Sve", meh: false },
-                { start: "11:00", end: "13:00", course: "Električni strojevi", type: "Auditorne vježbe", room: "U1-23", grp: "Sve", meh: false }
-            ]
-        }
-    },
-    {
-        label: "6. Tjedan (09.11. - 14.11.) - Kolokviji",
-        days: { 0: [], 1: [], 2: [], 3: [], 4: [] }
-    },
-    {
-        label: "7. Tjedan (16.11. - 21.11.) - Praznik",
-        days: { 0: [], 1: [], 2: [], 3: [], 4: [] }
-    },
-    {
-        label: "8. - 11. Tjedan (23.11. - 19.12.) - DVK Lab",
-        days: {
-            0: [],
-            1: [
-                { start: "16:30", end: "18:30", course: "Digitalne videokomunikacije", type: "Laboratorij", room: "U1-9", grp: "Sve", meh: false }
-            ],
-            2: [], 3: [], 4: []
-        }
-    },
-    {
-        label: "12. Tjedan (21.12. - 26.12.) - Božićni tjedan",
-        days: {
-            0: [],
-            1: [
-                { start: "16:30", end: "18:30", course: "Digitalne videokomunikacije", type: "Laboratorij", room: "U1-9", grp: "Sve", meh: false }
-            ],
-            2: [], 3: [], 4: []
-        }
-    },
-    {
-        label: "13. Tjedan (04.01. - 09.01.) - Nova Godina / Praznici",
-        days: { 0: [], 1: [], 2: [], 3: [], 4: [] }
-    },
-    {
-        label: "14. - 16. Tjedan (11.01. - 30.01.) - Završni tjedni",
-        days: {
-            0: [],
-            1: [
-                { start: "16:30", end: "18:30", course: "Digitalne videokomunikacije", type: "Laboratorij", room: "U1-9", grp: "Sve", meh: false }
-            ],
-            2: [], 3: [], 4: []
-        }
-    }
+    { start: "2026-10-05", days: [[], tue(), wedRest(), thuWeek1(), fri()] },
+    { start: "2026-10-12", days: [[], tue(), wed("RE"), thu("EE", true), fri()] },
+    { start: "2026-10-19", days: [[], tue(), wed("EE"), thu("RE", true), fri()] },
+    { start: "2026-10-26", days: [[], [...orLab(), ...tue()], wed("EE"), thu("RE", true), fri()] },
+    { start: "2026-11-02", days: [[], [...orLab(), ...tue()], wed("EE"), thu("RE", true), fri()] },
+    { start: "2026-11-09", days: [[], [...orLab(), ...tue()], wed("EE"), thu("RE", false), fri()] },
+    { start: "2026-11-16", days: [[], [...asuOrLab(), ...tue()], "Praznik", thu("RE", false), fri()] },
+    { start: "2026-11-23", days: [[], [...asuOrLab(), ...tue(), ...dvkLab()], wed("EE"), thu("RE", false), fri()] },
+    { start: "2026-11-30", days: [[], dvkLab(), [], [], []] },
+    { start: "2026-12-07", days: [[], dvkLab(), [], [], []] },
+    { start: "2026-12-14", days: [[], dvkLab(), [], [], []] },
+    { start: "2026-12-21", days: [[], dvkLab(), [], "Badnjak", "Božić"] },
+    { start: "2027-01-04", days: ["Praznik", "Praznik", "Praznik", [], []] },
+    { start: "2027-01-11", days: [[], dvkLab(), [], [], []] },
+    { start: "2027-01-18", days: [[], dvkLab(), [], [], []] },
+    { start: "2027-01-25", days: [[], dvkLab(), [], [], []] }
 ];
 
-// 3. LOGIKA ZA PRORAČUN VLAKOVA I BIJEGA
+// ============ 3. DATUMI ============
+const MONTHS = ["siječnja", "veljače", "ožujka", "travnja", "svibnja", "lipnja", "srpnja", "kolovoza", "rujna", "listopada", "studenoga", "prosinca"];
+const DAYS_FULL = ["Ponedjeljak", "Utorak", "Srijeda", "Četvrtak", "Petak"];
+const DAYS_SHORT = ["PON", "UTO", "SRI", "ČET", "PET"];
+const pad = n => String(n).padStart(2, "0");
+WEEKS.forEach(w => { const [y, m, d] = w.start.split("-").map(Number); w.date = new Date(y, m - 1, d); });
+const dateOf = (wi, di) => { const s = WEEKS[wi].date; return new Date(s.getFullYear(), s.getMonth(), s.getDate() + di); };
+const shortDate = d => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.`;
+const longDate = d => `${d.getDate()}. ${MONTHS[d.getMonth()]} ${d.getFullYear()}.`;
+const sameDay = (a, b) => a.toDateString() === b.toDateString();
+
+// ============ 4. VLAKOVI ============
 function getTransit(firstStart, lastEnd) {
-    if (!firstStart || !lastEnd) return null;
+    const startMin = toMin(firstStart), endMin = toMin(lastEnd);
+    let morning = null;
+    for (const t of TRAINS_L2V) { if (toMin(t.arr) + WALK <= startMin) morning = t; else break; }
+    if (!morning) morning = TRAINS_L2V[0];
+    let evening = TRAINS_V2L.find(t => toMin(t.dep) >= endMin + WALK) || TRAINS_V2L[TRAINS_V2L.length - 1];
+    // Bijeg 30 min ranije: na kolodvoru si točno u trenutku kraja nastave
+    const early = TRAINS_V2L.find(t => toMin(t.dep) >= endMin && toMin(t.dep) < toMin(evening.dep));
+    return { morning, evening, early };
+}
 
-    const startMin = toMinutes(firstStart);
-    const endMin = toMinutes(lastEnd);
+// ============ 5. STANJE ============
+let activeWeek = 0, activeDay = 0, view = "day";
+let activeGroup = localStorage.getItem("unin_grp") || "Sve";
+const $ = id => document.getElementById(id);
 
-    // Odlazak (Stiže na kolodvor 25-30 min prije predavanja)
-    let morningTrain = null;
-    for (const t of TRAINS_L2V) {
-        if (toMinutes(t.arr) <= startMin - 20) {
-            morningTrain = t;
-        } else {
-            break;
-        }
+function jumpToToday() {
+    const now = new Date();
+    let wi = WEEKS.findIndex((w, i) => now >= w.date && now < dateOf(i, 7));
+    if (wi < 0) wi = now < WEEKS[0].date ? 0 : WEEKS.length - 1;
+    activeWeek = wi;
+    const dow = now.getDay(); // 0 = ned
+    activeDay = (dow >= 1 && dow <= 5) ? dow - 1 : 0;
+}
+
+const lessonsOf = (wi, di) => {
+    const d = WEEKS[wi].days[di];
+    return Array.isArray(d) ? d.filter(l => activeGroup === "Sve" || l.grp === "Sve" || l.grp === activeGroup) : [];
+};
+const holidayOf = (wi, di) => typeof WEEKS[wi].days[di] === "string" ? WEEKS[wi].days[di] : null;
+
+const lessonHTML = l => `
+    <article class="lesson">
+        <div class="when"><b>${l.start}</b><span>${l.end}</span></div>
+        <div class="what">
+            <h3>${l.course}</h3>
+            <p>${l.type} · ${l.room}${l.grp !== "Sve" ? ` · Grupa ${l.grp}` : ""}${l.meh ? " · + Mehatronika" : ""}</p>
+        </div>
+    </article>`;
+
+// ============ 6. ISCRTAVANJE ============
+function renderWeekSelect() {
+    $("week-select").innerHTML = WEEKS.map((w, i) =>
+        `<option value="${i}">${i + 1}. tjedan · ${shortDate(dateOf(i, 0))} – ${shortDate(dateOf(i, 4))}${dateOf(i, 0).getFullYear() !== 2026 ? "2027." : ""}</option>`).join("");
+    $("week-select").value = activeWeek;
+}
+
+function renderDays() {
+    const today = new Date();
+    $("days-nav").innerHTML = DAYS_SHORT.map((n, i) => {
+        const d = dateOf(activeWeek, i);
+        const has = lessonsOf(activeWeek, i).length > 0;
+        return `<button class="day-tab ${i === activeDay ? "active" : ""} ${has ? "has" : ""} ${sameDay(d, today) ? "today" : ""}" data-day="${i}">
+            <span class="dn">${n}</span><span class="dd">${d.getDate()}</span><span class="dm">${pad(d.getMonth() + 1)}.</span><span class="dot"></span></button>`;
+    }).join("");
+}
+
+function renderDay() {
+    const d = dateOf(activeWeek, activeDay);
+    const lectures = lessonsOf(activeWeek, activeDay);
+    const holiday = holidayOf(activeWeek, activeDay);
+    $("day-title").textContent = `${DAYS_FULL[activeDay]}, ${longDate(d)}`;
+    $("day-meta").textContent = holiday ? holiday : `${lectures.length} ${lectures.length === 1 ? "obveza" : "obveza"}`;
+
+    if (!lectures.length) {
+        $("lectures-list").innerHTML = holiday
+            ? `<div class="empty"><b>${holiday}</b>Nema nastave.</div>`
+            : `<div class="empty"><b>Slobodan dan</b>Nema nastave${activeGroup !== "Sve" ? ` za grupu ${activeGroup}` : ""}.</div>`;
+        $("transit-section").hidden = true;
+        return;
     }
-    if (!morningTrain) morningTrain = TRAINS_L2V[0];
+    $("lectures-list").innerHTML = lectures.map(lessonHTML).join("");
 
-    // Redovni povratak: Ostaješ do kraja + 30 min hoda do stanice
-    const regularStationArrival = endMin + 30;
-    let eveningTrain = TRAINS_V2L.find(t => toMinutes(t.dep) >= regularStationArrival);
-    if (!eveningTrain) eveningTrain = TRAINS_V2L[TRAINS_V2L.length - 1];
-
-    // RANI BIJEG (Bježiš 30 min ranije):
-    // Ako predavanje završava u 16:00, bježiš u 15:30.
-    // 15:30 + 30 min hoda = na stanici si točno u 16:00!
-    const earlyStationArrival = endMin;
-    let earlyTrain = TRAINS_V2L.find(t => toMinutes(t.dep) >= earlyStationArrival && toMinutes(t.dep) < toMinutes(eveningTrain.dep));
-
-    return {
-        morning: morningTrain,
-        evening: eveningTrain,
-        early: earlyTrain
-    };
+    const first = lectures[0], last = lectures[lectures.length - 1];
+    const lastEnd = lectures.reduce((m, l) => toMin(l.end) > toMin(m) ? l.end : m, last.end);
+    const t = getTransit(first.start, lastEnd);
+    const card = (cls, lbl, time, note) => `<div class="t-card ${cls}"><div class="lbl">${lbl}</div><div class="time">${time}</div><div class="note">${note}</div></div>`;
+    const early = t.early;
+    $("transit").innerHTML =
+        card("", "Odlazak", `${t.morning.dep} → ${t.morning.arr}`, `Vlak ${t.morning.no} · na faksu u ${fmtMin(toMin(t.morning.arr) + WALK)} · nastava u ${first.start}`) +
+        card("", "Redovni povratak", `${t.evening.dep} → ${t.evening.arr}`, `Vlak ${t.evening.no} · nastava gotova u ${lastEnd}`) +
+        card("hl", "Odlazak 30 min ranije", early ? `${early.dep} → ${early.arr}` : `${t.evening.dep} → ${t.evening.arr}`,
+            early ? `Vlak ${early.no} · kreni u ${fmtMin(toMin(lastEnd) - WALK)}` : "Nema ranijeg vlaka, isti kao redovni");
+    $("transit-section").hidden = false;
 }
 
-// 4. STANJE I INTERAKCIJA
-let activeWeek = 0;
-let activeDay = 1; // Default Utorak
-let activeGroup = localStorage.getItem("unin_grp") || "A";
-
-const weekSelect = document.getElementById("week-select");
-const daysNav = document.getElementById("days-nav");
-const groupButtons = document.getElementById("group-buttons");
-const lecturesList = document.getElementById("lectures-list");
-const selectedDayHeading = document.getElementById("selected-day-heading");
-const lectureCountBadge = document.getElementById("lecture-count");
-
-const morningTimeEl = document.getElementById("morning-time");
-const morningDescEl = document.getElementById("morning-desc");
-const morningStatusEl = document.getElementById("morning-status");
-
-const eveningTimeEl = document.getElementById("evening-time");
-const eveningDescEl = document.getElementById("evening-desc");
-const eveningStatusEl = document.getElementById("evening-status");
-
-const earlyTimeEl = document.getElementById("early-time");
-const earlyDescEl = document.getElementById("early-desc");
-const earlyBadgeEl = document.getElementById("early-badge");
-
-// Popunjavanje padajućeg izbornika tjedana
-if (weekSelect) {
-    weekSelect.innerHTML = "";
-    WEEKS.forEach((w, i) => {
-        const opt = document.createElement("option");
-        opt.value = i;
-        opt.textContent = w.label;
-        weekSelect.appendChild(opt);
-    });
-}
-
-// Označi spremljenu grupu
-document.querySelectorAll(".grp-btn").forEach(b => {
-    b.classList.toggle("active", b.dataset.grp === activeGroup);
-});
-
-// Event Listeneri
-if (weekSelect) {
-    weekSelect.addEventListener("change", (e) => {
-        activeWeek = Number(e.target.value);
-        updateDots();
-        render();
-    });
-}
-
-if (daysNav) {
-    daysNav.addEventListener("click", (e) => {
-        const tab = e.target.closest(".day-tab");
-        if (!tab) return;
-        document.querySelectorAll(".day-tab").forEach(t => t.classList.remove("active"));
-        tab.classList.add("active");
-        activeDay = Number(tab.dataset.day);
-        render();
-    });
-}
-
-if (groupButtons) {
-    groupButtons.addEventListener("click", (e) => {
-        const btn = e.target.closest(".grp-btn");
-        if (!btn) return;
-        document.querySelectorAll(".grp-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        activeGroup = btn.dataset.grp;
-        localStorage.setItem("unin_grp", activeGroup);
-        updateDots();
-        render();
-    });
-}
-
-function updateDots() {
-    [0, 1, 2, 3, 4].forEach(d => {
-        const raw = (WEEKS[activeWeek] && WEEKS[activeWeek].days[d]) ? WEEKS[activeWeek].days[d] : [];
-        const filtered = raw.filter(l => activeGroup === "Sve" || l.grp === "Sve" || l.grp === activeGroup);
-        const dot = document.getElementById(`dot-${d}`);
-        if (dot) dot.classList.toggle("has-class", filtered.length > 0);
-    });
+function renderWeek() {
+    const today = new Date();
+    $("view-week").innerHTML = DAYS_FULL.map((n, i) => {
+        const d = dateOf(activeWeek, i), ls = lessonsOf(activeWeek, i), h = holidayOf(activeWeek, i);
+        return `<div class="wk-day ${sameDay(d, today) ? "today" : ""}">
+            <div class="wk-head"><b>${n}</b><span>${longDate(d)}</span></div>
+            ${ls.length ? `<div class="wk-lessons">${ls.map(lessonHTML).join("")}</div>` : `<div class="wk-none">${h || "Bez nastave"}</div>`}
+        </div>`;
+    }).join("");
 }
 
 function render() {
-    const dayNames = ["Ponedjeljak", "Utorak", "Srijeda", "Četvrtak", "Petak"];
-    if (selectedDayHeading) {
-        selectedDayHeading.textContent = `${dayNames[activeDay]} • ${WEEKS[activeWeek].label}`;
-    }
-
-    const raw = (WEEKS[activeWeek] && WEEKS[activeWeek].days[activeDay]) ? WEEKS[activeWeek].days[activeDay] : [];
-    const lectures = raw.filter(l => activeGroup === "Sve" || l.grp === "Sve" || l.grp === activeGroup);
-
-    if (lectureCountBadge) {
-        lectureCountBadge.textContent = `${lectures.length} ${lectures.length === 1 ? 'predavanje' : 'predavanja'}`;
-    }
-
-    if (lecturesList) {
-        lecturesList.innerHTML = "";
-    }
-
-    // SLOBODAN DAN
-    if (lectures.length === 0) {
-        if (lecturesList) {
-            lecturesList.innerHTML = `
-                <div class="empty-day">
-                    <h5 class="fw-bold mb-1 text-light"><i class="bi bi-cup-hot-fill text-warning me-2"></i>Slobodan dan!</h5>
-                    <p class="text-muted">Nema predavanja prema odabranoj Grupi ${activeGroup}.</p>
-                </div>`;
-        }
-        if (morningTimeEl) morningTimeEl.textContent = "--:-- ➔ --:--";
-        if (morningDescEl) morningDescEl.textContent = "Nema nastave";
-        if (morningStatusEl) morningStatusEl.textContent = "Slobodno";
-
-        if (eveningTimeEl) eveningTimeEl.textContent = "--:-- ➔ --:--";
-        if (eveningDescEl) eveningDescEl.textContent = "Nema nastave";
-        if (eveningStatusEl) eveningStatusEl.textContent = "Slobodno";
-
-        if (earlyTimeEl) earlyTimeEl.textContent = "--:-- ➔ --:--";
-        if (earlyDescEl) earlyDescEl.textContent = "Nema potrebe za bijegom";
-        return;
-    }
-
-    // PRIKAZ PREDAVANJA S PUNIM BOJAMA
-    lectures.forEach(l => {
-        let typeClass = "predavanje";
-        let tagBadgeClass = "tag-pred";
-        if (l.type.toLowerCase().includes("lab")) {
-            typeClass = "laboratorij";
-            tagBadgeClass = "tag-lab";
-        } else if (l.type.toLowerCase().includes("aud")) {
-            typeClass = "auditorne";
-            tagBadgeClass = "tag-aud";
-        }
-
-        const card = document.createElement("div");
-        card.className = `lecture-card ${typeClass}`;
-        card.innerHTML = `
-            <div class="lecture-time-box">
-                <span class="time-start">${l.start}</span>
-                <span class="time-end">do ${l.end}</span>
-            </div>
-            <div class="lecture-content">
-                <h5 class="course-title">${l.course}</h5>
-                <div class="d-flex gap-2 flex-wrap align-items-center">
-                    <span class="badge-tag tag-room"><i class="bi bi-door-closed-fill me-1"></i>${l.room}</span>
-                    <span class="badge-tag ${tagBadgeClass}">${l.type}</span>
-                    <span class="badge-tag tag-grp">Grupa ${l.grp}</span>
-                    ${l.meh ? '<span class="badge-tag tag-meh">+ MEHATRONIKA</span>' : ''}
-                </div>
-            </div>`;
-        if (lecturesList) lecturesList.appendChild(card);
-    });
-
-    // PRORAČUN VLAKOVA
-    const first = lectures[0];
-    const last = lectures[lectures.length - 1];
-    const transit = getTransit(first.start, last.end);
-
-    if (transit) {
-        // Odlazak
-        if (morningTimeEl) morningTimeEl.textContent = `${transit.morning.dep} ➔ ${transit.morning.arr}`;
-        if (morningDescEl) morningDescEl.textContent = `Vlak ${transit.morning.no} • vožnja ${transit.morning.dur} min`;
-        if (morningStatusEl) morningStatusEl.textContent = `Nastava počinje u ${first.start}`;
-
-        // Redovni
-        if (eveningTimeEl) eveningTimeEl.textContent = `${transit.evening.dep} ➔ ${transit.evening.arr}`;
-        if (eveningDescEl) eveningDescEl.textContent = `Vlak ${transit.evening.no} • na stanici si u ${toMinutes(last.end) + 30 > 1440 ? 'sutra' : formatTime(toMinutes(last.end) + 30)}`;
-        if (eveningStatusEl) eveningStatusEl.textContent = `Kraj u ${last.end}`;
-
-        // RANI BIJEG (30 min ranije)
-        if (transit.early) {
-            if (earlyTimeEl) earlyTimeEl.textContent = `${transit.early.dep} ➔ ${transit.early.arr}`;
-            if (earlyDescEl) earlyDescEl.textContent = `Vlak ${transit.early.no} (bježiš u ${formatTime(toMinutes(last.end) - 30)})`;
-            if (earlyBadgeEl) earlyBadgeEl.textContent = `Ušteda vremena!`;
-        } else {
-            if (earlyTimeEl) earlyTimeEl.textContent = `${transit.evening.dep} ➔ ${transit.evening.arr}`;
-            if (earlyDescEl) earlyDescEl.textContent = `Nema ranijeg vlaka (ide isti kao redovni)`;
-            if (earlyBadgeEl) earlyBadgeEl.textContent = `Isti vlak`;
-        }
-    }
+    $("week-select").value = activeWeek;
+    renderDays();
+    $("view-day").hidden = view !== "day";
+    $("view-week").hidden = view !== "week";
+    $("days-nav").hidden = view !== "day";
+    view === "day" ? renderDay() : renderWeek();
 }
 
-// Cijela tablica vlakova u harmonici
-const tableL2V = document.getElementById("table-l2v");
-if (tableL2V) {
-    tableL2V.innerHTML = "";
-    TRAINS_L2V.forEach(t => {
-        tableL2V.innerHTML += `<div class="row-train"><span>Vlak ${t.no}</span><strong>${t.dep} ➔ ${t.arr}</strong><span>${t.dur} min</span></div>`;
-    });
-}
+// ============ 7. INTERAKCIJA ============
+$("days-nav").addEventListener("click", e => {
+    const b = e.target.closest(".day-tab"); if (!b) return;
+    activeDay = +b.dataset.day; render();
+});
+$("week-select").addEventListener("change", e => { activeWeek = +e.target.value; render(); });
+$("prev").addEventListener("click", () => { if (activeWeek > 0) { activeWeek--; render(); } });
+$("next").addEventListener("click", () => { if (activeWeek < WEEKS.length - 1) { activeWeek++; render(); } });
+$("today").addEventListener("click", () => { jumpToToday(); render(); });
+$("view-switch").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    view = b.dataset.view;
+    document.querySelectorAll("#view-switch button").forEach(x => x.classList.toggle("active", x === b));
+    render();
+});
+$("group-buttons").addEventListener("click", e => {
+    const b = e.target.closest(".grp-btn"); if (!b) return;
+    activeGroup = b.dataset.grp;
+    localStorage.setItem("unin_grp", activeGroup);
+    document.querySelectorAll(".grp-btn").forEach(x => x.classList.toggle("active", x === b));
+    render();
+});
 
-const tableV2L = document.getElementById("table-v2l");
-if (tableV2L) {
-    tableV2L.innerHTML = "";
-    TRAINS_V2L.forEach(t => {
-        tableV2L.innerHTML += `<div class="row-train"><span>Vlak ${t.no}</span><strong>${t.dep} ➔ ${t.arr}</strong><span>${t.dur} min</span></div>`;
-    });
-}
+const trainRows = list => list.map(t => `<div class="row-train"><span>${t.no}</span><strong>${t.dep} → ${t.arr}</strong><span>${t.dur} min</span></div>`).join("");
+$("table-l2v").innerHTML = trainRows(TRAINS_L2V);
+$("table-v2l").innerHTML = trainRows(TRAINS_V2L);
 
-// Pokretanje
-updateDots();
+document.querySelectorAll(".grp-btn").forEach(b => b.classList.toggle("active", b.dataset.grp === activeGroup));
+renderWeekSelect();
+jumpToToday();
 render();

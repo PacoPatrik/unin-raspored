@@ -2,154 +2,70 @@
 <html lang="hr">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0d1117">
-    <title>UNIN Raspored & Vlakovi</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#0f1115">
+    <title>Raspored · Elektrotehnika 3. godina</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app-shell">
-        <!-- Zaglavlje -->
-        <header class="app-header">
-            <div class="container-lg d-flex justify-content-between align-items-center">
-                <div class="brand">
-                    <span class="brand-title"><i class="bi bi-mortarboard-fill text-gradient me-2"></i>Sveučilište Sjever</span>
-                    <span class="brand-sub">Elektrotehnika • 3. Godina</span>
-                </div>
-                <!-- Odabir Grupe -->
-                <div class="group-switch">
-                    <span class="group-label">Grupa:</span>
-                    <div class="group-buttons" id="group-buttons">
-                        <button type="button" class="grp-btn" data-grp="Sve">Sve</button>
-                        <button type="button" class="grp-btn active" data-grp="A">A</button>
-                        <button type="button" class="grp-btn" data-grp="B">B</button>
-                        <button type="button" class="grp-btn" data-grp="C">C</button>
-                    </div>
-                </div>
-            </div>
-        </header>
+<header class="top">
+    <div class="wrap top-in">
+        <div>
+            <div class="brand">Raspored</div>
+            <div class="sub">Sveučilište Sjever · Elektrotehnika · 3. godina</div>
+        </div>
+        <div class="seg" id="group-buttons" aria-label="Grupa">
+            <button class="grp-btn" data-grp="Sve">Sve</button>
+            <button class="grp-btn" data-grp="A">A</button>
+            <button class="grp-btn" data-grp="B">B</button>
+            <button class="grp-btn" data-grp="C">C</button>
+        </div>
+    </div>
+</header>
 
-        <main class="container-lg py-4">
-            <!-- 1. KONTROLE: Tjedan i Dani (NA VRHU) -->
-            <div class="glass-panel p-3 mb-4">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-primary-gradient px-3 py-2 rounded-pill"><i class="bi bi-calendar-week me-1"></i> Odabir tjedna:</span>
-                        <select id="week-select" class="form-select form-select-sm custom-select"></select>
-                    </div>
-                    <div class="route-badge">
-                        <i class="bi bi-train-front text-info me-1"></i> Ludbreg ⇄ Varaždin <span class="text-warning ms-1">(30 min pješice)</span>
-                    </div>
-                </div>
+<main class="wrap">
+    <section class="weekbar">
+        <button class="icon-btn" id="prev" aria-label="Prethodni tjedan">‹</button>
+        <select id="week-select" aria-label="Tjedan"></select>
+        <button class="icon-btn" id="next" aria-label="Sljedeći tjedan">›</button>
+        <button class="ghost" id="today">Danas</button>
+    </section>
 
-                <!-- Birač Dana -->
-                <div class="days-nav" id="days-nav">
-                    <button class="day-tab" data-day="0">
-                        <span class="day-short">PON</span>
-                        <span class="day-dot" id="dot-0"></span>
-                    </button>
-                    <button class="day-tab active" data-day="1">
-                        <span class="day-short">UTO</span>
-                        <span class="day-dot" id="dot-1"></span>
-                    </button>
-                    <button class="day-tab" data-day="2">
-                        <span class="day-short">SRI</span>
-                        <span class="day-dot" id="dot-2"></span>
-                    </button>
-                    <button class="day-tab" data-day="3">
-                        <span class="day-short">ČET</span>
-                        <span class="day-dot" id="dot-3"></span>
-                    </button>
-                    <button class="day-tab" data-day="4">
-                        <span class="day-short">PET</span>
-                        <span class="day-dot" id="dot-4"></span>
-                    </button>
-                </div>
-            </div>
+    <nav class="days" id="days-nav"></nav>
 
-            <!-- 2. GLAVNI RASPORED PREDAVANJA -->
-            <section class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="fw-bold m-0" id="selected-day-heading">Utorak</h4>
-                    <span class="badge bg-dark-subtle border border-secondary text-light px-3 py-2 rounded-pill" id="lecture-count">0 predavanja</span>
-                </div>
-
-                <div id="lectures-list" class="d-flex flex-column gap-3">
-                    <!-- Kartice predavanja -->
-                </div>
-            </section>
-
-            <!-- 3. PUTOVANJE VLAKOVIMA ZA TAJ DAN -->
-            <section class="mb-4">
-                <h5 class="fw-bold mb-3"><i class="bi bi-ticket-perforated-fill text-warning me-2"></i>Plan Vlakova za ovaj dan</h5>
-                <div class="row g-3">
-                    <!-- Odlazak -->
-                    <div class="col-md-4">
-                        <div class="card-transit card-morning h-100 p-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="transit-tag tag-morning"><i class="bi bi-arrow-up-right-circle-fill me-1"></i> Odlazak na faks</span>
-                                <span class="badge-time-status" id="morning-status">-</span>
-                            </div>
-                            <div class="transit-time" id="morning-time">--:-- ➔ --:--</div>
-                            <div class="transit-sub" id="morning-desc">Ludbreg ➔ Varaždin</div>
-                        </div>
-                    </div>
-
-                    <!-- Redovni povratak -->
-                    <div class="col-md-4">
-                        <div class="card-transit card-evening h-100 p-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="transit-tag tag-evening"><i class="bi bi-check-circle-fill me-1"></i> Redovni povratak</span>
-                                <span class="badge-time-status" id="evening-status">-</span>
-                            </div>
-                            <div class="transit-time" id="evening-time">--:-- ➔ --:--</div>
-                            <div class="transit-sub" id="evening-desc">Ostaješ do kraja predavanja</div>
-                        </div>
-                    </div>
-
-                    <!-- RANI BIJEG (30 MIN RANIJE) -->
-                    <div class="col-md-4">
-                        <div class="card-transit card-early h-100 p-3" id="early-transit-card">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="transit-tag tag-early"><i class="bi bi-lightning-charge-fill me-1"></i> Bijeg 30 min ranije</span>
-                                <span class="badge-time-status text-warning border-warning" id="early-badge">Top Opcija</span>
-                            </div>
-                            <div class="transit-time text-warning" id="early-time">--:-- ➔ --:--</div>
-                            <div class="transit-sub text-light" id="early-desc">Pobjeći ranije s nastave</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 4. VOZNI RED VLAKOVA (HARMONIKA) -->
-            <div class="glass-panel p-0 overflow-hidden mt-4">
-                <button class="accordion-btn w-100" type="button" data-bs-toggle="collapse" data-bs-target="#trains-table-collapse">
-                    <span><i class="bi bi-clock-history me-2 text-info"></i> Pogledaj cijeli vozni red vlakova (svi polasci)</span>
-                    <i class="bi bi-chevron-down"></i>
-                </button>
-                <div class="collapse" id="trains-table-collapse">
-                    <div class="p-3 border-top border-secondary-subtle">
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <h6 class="fw-bold text-success border-bottom border-success-subtle pb-2">Ludbreg ➔ Varaždin:</h6>
-                                <div id="table-l2v" class="train-table-body"></div>
-                            </div>
-                            <div class="col-md-6">
-                                <h6 class="fw-bold text-info border-bottom border-info-subtle pb-2">Varaždin ➔ Ludbreg:</h6>
-                                <div id="table-v2l" class="train-table-body"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
+    <div class="seg view-switch" id="view-switch">
+        <button data-view="day" class="active">Dan</button>
+        <button data-view="week">Cijeli tjedan</button>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="app.js"></script>
+    <div id="view-day">
+        <div class="dayhead">
+            <h1 id="day-title"></h1>
+            <span id="day-meta"></span>
+        </div>
+        <div id="lectures-list"></div>
+
+        <section id="transit-section">
+            <h2>Vlakovi · Ludbreg ⇄ Varaždin <small>30 min pješice do fakulteta</small></h2>
+            <div class="transit" id="transit"></div>
+        </section>
+    </div>
+
+    <div id="view-week" hidden></div>
+
+    <details class="all">
+        <summary>Cijeli vozni red</summary>
+        <div class="all-grid">
+            <div><h3>Ludbreg → Varaždin</h3><div id="table-l2v"></div></div>
+            <div><h3>Varaždin → Ludbreg</h3><div id="table-v2l"></div></div>
+        </div>
+    </details>
+</main>
+
+<script src="app.js"></script>
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");</script>
 </body>
 </html>
